@@ -11,9 +11,7 @@ Clone this project.
 
 Then execute run.sh from the local folder.
 
-Next, navigate in your terminal to the directory you cloned this, and spin up the containers for the web server by running `docker-compose up -d --build site`.
-
-Bringing up the Docker Compose network with `site` instead of just using `up`, ensures that only our site's containers are brought up at the start, instead of all of the command containers as well. The following are built for our web server, with their exposed ports detailed:
+The navigate to http://localhost:8090/
 
 ## Mysql
 
@@ -42,6 +40,7 @@ By default, whenever you bring down the Docker network, your MySQL data will be 
 
 1. Create a `mysql` folder in the project root, alongside the `nginx` and `src` folders.
 2. Under the mysql service in your `docker-compose.yml` file, add the following lines:
+
 
 ```
 volumes:
