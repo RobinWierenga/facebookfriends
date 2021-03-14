@@ -9,11 +9,9 @@ Based on setup provided [here](https://dev.to/aschmelyun/the-beauty-of-docker-fo
 
 To get started, make sure you have [Docker installed](https://docs.docker.com/docker-for-mac/install/) on your system, and then clone this repository.
 
-Clone this project.
-
 Then execute run.sh from the local folder.
 
-Then navigate to http://localhost:8090/
+You can open the application at http://localhost:8090/
 
 ## Mysql
 
