@@ -24,7 +24,7 @@ class FacebookFriendRepository
     /*
     * Complexity
     * nr of friends ^ depth
-    * So with 10 friends each it's 10*10*10*10*10 we have to search 10.000 members max.
+    * So with 10 friends each it's 10*10*10*10*10 we have to search 100.000 members max.
     *
     * Assumption: each friend has 10 new friends, off course in real friendships a group knows each other.
     * The goal is to load as least data as possible without using joins, assumption query by index is fast so we might break it up into a couple of queries
