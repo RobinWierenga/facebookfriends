@@ -36,7 +36,7 @@ and increasing this value will take some time to fill the db (1 min for 1 millio
 
 ## Code
 
-Main breath-first-search logic is located in FacebokFriendRepository.php.
+Main breath-first-search logic is located in FacebookFriendRepository.php.
 
 ## Persistent MySQL Storage
 
