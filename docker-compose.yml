@@ -15,7 +15,6 @@ services:
       - ./src:/var/www/html:delegated
     depends_on:
       - php
-      - redis
       - mysql
     networks:
       - laravel
@@ -49,15 +48,6 @@ services:
     networks:
       - laravel
 
-  redis:
-    image: redis:alpine
-    container_name: redis
-    restart: unless-stopped
-    ports:
-      - 6378:6379
-    networks:
-      - laravel
-
   composer:
     build:
       context: .
@@ -70,16 +60,6 @@ services:
       - php
     user: laravel
     entrypoint: ['composer', '--ignore-platform-reqs']
-    networks:
-      - laravel
-
-  npm:
-    image: node:13.7
-    container_name: npm
-    volumes:
-      - ./src:/var/www/html
-    working_dir: /var/www/html
-    entrypoint: ['npm']
     networks:
       - laravel
 
