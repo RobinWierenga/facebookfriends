@@ -30,6 +30,12 @@ localhost
 - **php** - `:9000`
 - **redis** - `:6380`
 
+## Database data
+
+The database is filled with 11.110 rows, this is equal to 5 levels of friends. To increase the amount of friends
+change the MAX_DEPTH var in DatabaseSeeder.php and run docker-compose run --rm artisan db:seed. This will delete all data from the db
+and increasing this value will take some time to fill the db (1 min for 1 million rows.. so around 10 mins for 10 million for a depth of 7). 
+
 ## Persistent MySQL Storage
 
 By default, whenever you bring down the Docker network, your MySQL data will be removed after the containers are destroyed. If you would like to have persistent data that remains after bringing containers down and back up, do the following:

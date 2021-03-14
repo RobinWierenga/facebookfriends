@@ -27,14 +27,16 @@
 <div class="container">
     <h1>Friends</h1>
 
+    <p>Find friends of friends. The path is unidirectional at the moment. So if John knows Sue, Sue doesn't know John, its crazy.</p>
+
     <form method="get" id="shortest_path_form">
         <div class="row">
             <div class="col">
-                <input type="text" name="from" value="{{ $from }}" class="form-control" placeholder="Find from user"
+                <input type="text" name="from" value="{{ $from }}" class="form-control" placeholder="Find from user id"
                        aria-label="From user">
             </div>
             <div class="col">
-                <input type="text" name="to" value="{{ $to }}" class="form-control" placeholder="To friend"
+                <input type="text" name="to" value="{{ $to }}" class="form-control" placeholder="To friend id"
                        aria-label="To friend">
             </div>
             <div class="col">
