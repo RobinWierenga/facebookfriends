@@ -12,8 +12,6 @@ class FacebookFriendRepository
 
     private $all_friends = [];
 
-    private $path = [];
-
     private $last_index = 0;
 
     public function findByUserId(int $user_id): LengthAwarePaginator
@@ -34,18 +32,18 @@ class FacebookFriendRepository
     */
     public function findShortestPath($from_user_id, $to_user_id): array
     {
-        $this->path[] = $from_user_id;
+        $path[] = $from_user_id;
 
         // nice try
         if ($from_user_id == $to_user_id) {
-            return $this->path;
+            return $path;
         }
 
         // first level
         $found = $this->searchForFriend($from_user_id, $to_user_id);
         if ($found) {
-            $this->path[] = $to_user_id;
-            return $this->path;
+            $path[] = $to_user_id;
+            return $path;
         }
 
         for ($i = 0; $i < self::MAX_DEPTH; $i++) {
