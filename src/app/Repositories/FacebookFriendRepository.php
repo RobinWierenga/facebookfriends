@@ -41,6 +41,7 @@ class FacebookFriendRepository
 
         // first level
         $found = $this->searchForFriend($from_user_id, $to_user_id);
+
         if ($found) {
             $path[] = $to_user_id;
             return $path;
@@ -48,10 +49,11 @@ class FacebookFriendRepository
 
         for ($i = 0; $i < self::MAX_DEPTH; $i++) {
             // continue the search at the last index, this way it acts as a queue
-            $array_slice = array_slice($this->all_friends, $this->last_index);
+            $array_slice = array_slice(array_keys($this->all_friends), $this->last_index);
+
 
             // we dont need value but this is a convenient way to get just the keys
-            foreach ($array_slice as $friend => $value) {
+            foreach ($array_slice as $friend) {
                 $found = $this->searchForFriend($friend, $to_user_id);
                 if ($found) {
                     return $this->reconstructPath($from_user_id, $to_user_id);
