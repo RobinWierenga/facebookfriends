@@ -1,5 +1,7 @@
 # facebookfriends example project
 
+![Alt text](example.png?raw=true "Example")
+
 Example project for facebookfriend finder. This demonstrates how you can determine if a friend is connected through
 another friend based on a local data structure. This is not connected to facebook so it can be used in any application.
 
