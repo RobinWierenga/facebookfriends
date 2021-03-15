@@ -12,8 +12,6 @@ class FacebookFriendRepository
 
     private $all_friends = [];
 
-    private $last_index = 0;
-
     public function findByUserId(int $user_id): LengthAwarePaginator
     {
         return FacebookFriend::query()->where('user_id', $user_id)->paginate(10);
@@ -47,11 +45,14 @@ class FacebookFriendRepository
             return $path;
         }
 
+        $search_from_index = 0;
+
         for ($i = 0; $i < self::MAX_DEPTH; $i++) {
             // continue the search at the last index, this way it acts as a queue
-            $array_slice = array_slice(array_keys($this->all_friends), $this->last_index);
+            $array_slice = array_slice(array_keys($this->all_friends), $search_from_index);
 
-            $new_index = count($this->all_friends);
+            // make sure the next iteration starts after we processed al the friends in the array_slice
+            $search_from_index = count($this->all_friends);
 
             // we dont need value but this is a convenient way to get just the keys
             foreach ($array_slice as $friend) {
@@ -60,7 +61,6 @@ class FacebookFriendRepository
                     return $this->reconstructPath($from_user_id, $to_user_id);
                 }
             }
-            $this->last_index = $new_index;
         }
 
         return [];
