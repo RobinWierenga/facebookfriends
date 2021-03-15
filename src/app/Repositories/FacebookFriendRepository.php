@@ -54,7 +54,6 @@ class FacebookFriendRepository
             // make sure the next iteration starts after we processed al the friends in the array_slice
             $search_from_index = count($this->all_friends);
 
-            // we dont need value but this is a convenient way to get just the keys
             foreach ($array_slice as $friend) {
                 $found = $this->searchForFriend($friend, $to_user_id);
                 if ($found) {
