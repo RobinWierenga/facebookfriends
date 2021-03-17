@@ -18,7 +18,7 @@ class FacebookFriendRepository
 
     /**
      * Version 2. Still not using joins but subqueries which should be superior to joins. In this
-     * example application it was a factor 100 times faster.
+     * example application it was a factor 100 times faster then the v1 version which retrieved the data.
      *
      * @param $from
      * @param $to
