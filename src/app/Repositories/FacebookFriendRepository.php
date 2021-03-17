@@ -7,108 +7,122 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class FacebookFriendRepository
 {
-    // the max amount of friends of friends you want to search for
-    const MAX_DEPTH = 4;
+    // the max depth of friends of friends you want to search for
+    const MAX_DEPTH = 5;
 
-    private $all_friends = [];
 
     public function findByUserId(int $user_id): LengthAwarePaginator
     {
         return FacebookFriend::query()->where('user_id', $user_id)->paginate(10);
     }
 
-    /*
-    * Complexity
-    * nr of friends ^ depth
-    * So with 10 friends each it's 10*10*10*10*10 we have to search 100.000 members max.
-    *
-    * Assumption: each friend has 10 new friends, off course in real friendships a group knows each other.
-    * The goal is to load as least data as possible without using joins, assumption query by index is fast so we might break it up into a couple of queries
-    *
-    * We will search breath first.
-    *
-    */
-    public function findShortestPath($from_user_id, $to_user_id): array
+    /**
+     * Version 2. Still not using joins but subqueries which should be superior to joins. In this
+     * example application it was a factor 100 times faster.
+     *
+     * @param $from
+     * @param $to
+     * @return array
+     */
+    public function findShortestPath2($from, $to): array
     {
-        $path[] = $from_user_id;
-
-        // nice try
-        if ($from_user_id == $to_user_id) {
-            return $path;
+        if ($from == $to) {
+            return [$from, $to];
         }
 
-        // first level
-        $found = $this->searchForFriend($from_user_id, $to_user_id);
-
-        if ($found) {
-            $path[] = $to_user_id;
-            return $path;
+        $user = $this->findWhoKnows($from, $to);
+        if (!$user) {
+            return [];
         }
 
-        $search_from_index = 0;
+        $i = 0;
+        $path = [$to, $user];
 
-        for ($i = 0; $i < self::MAX_DEPTH; $i++) {
-            // continue the search at the last index, this way it acts as a queue
-            $array_slice = array_slice(array_keys($this->all_friends), $search_from_index);
+        /**
+         * By executing the search in a loop we can backtrack how $from knows $to
+         * This could be optimized by limiting the amount of where user_id in (...) subqueries by looking at the found
+         * degree but i'm out of time for now :-)
+         */
+        while ($user != $from && $i < self::MAX_DEPTH) {
+            $user = $this->findWhoKnows($from, $user);
+            $path[] = $user;
+            $i++;
+        }
 
-            // make sure the next iteration starts after we processed al the friends in the array_slice
-            $search_from_index = count($this->all_friends);
+        return array_reverse($path);
+    }
 
-            foreach ($array_slice as $friend) {
-                $found = $this->searchForFriend($friend, $to_user_id);
-                if ($found) {
-                    return $this->reconstructPath($from_user_id, $to_user_id);
+    /**
+     * Returns the first person who knows $to which is somehow a connected friend of $to
+     * @param int $from
+     * @param int $to
+     * @return int
+     */
+    private function findWhoKnows(int $from, int $to): int
+    {
+        $sql = $this->buildQuery($from, $to, 5);
+
+        $results = FacebookFriend::getConnectionResolver()->connection()->select($sql)[0];
+        $results = json_decode(json_encode($results), true);
+
+        for ($i = 1; $i <= self::MAX_DEPTH; $i++) {
+            if (isset($results['level' . $i])) {
+                return $results['level' . $i];
+            }
+        }
+        return 0;
+    }
+
+
+    /**
+     * Constructs something like this:
+     *
+     *         $sql = "select (select user_id from facebook_friends where friend_id = $to) as level1,
+     *                 (select user_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id = $from)
+     *                and friend_id = $to) as level2,
+     *                (select user_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id = $from))
+     *                and friend_id = $to) as level3,
+     *                (select user_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id = 1$from))
+     *                and friend_id = $to) as level4,
+     *                (select user_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id in (select friend_id from facebook_friends where user_id = $from))))
+     *                and friend_id = $to) as level5";
+     *
+     * @param int $from
+     * @param int $to
+     * @param int $level
+     * @return string
+     */
+    private function buildQuery(int $from, int $to, int $level): string
+    {
+        $template_1 = "select user_id from facebook_friends where user_id in (";
+        $template_2 = "select friend_id from facebook_friends where user_id";
+
+        $sql = "select (select user_id from facebook_friends where user_id=$from and friend_id = $to) as level1";
+
+        // completely unreadable.. so read the comment above
+        if ($level > 1) {
+            for ($i = 2; $i <= $level; $i++) {
+                $sql .= ", (";
+                for ($j = 1; $j <= $i; $j++) {
+                    if ($j == 1) {
+                        $sql .= $template_1;
+                    } else {
+                        if ($j == $i) {
+                            $sql .= $template_2 . " = $from";
+                            for ($k = 1; $k < $j; $k++) {
+                                $sql .= ")";
+                            }
+                        } else {
+                            $sql .= $template_2 . " in (";
+                        }
+                    }
                 }
+                $sql .= " and friend_id = $to) as level$i";
             }
         }
 
-        return [];
+        return $sql;
     }
 
-    /**
-     * Retrieves all friends and adds them to the all_friends array excluding
-     * duplicates.
-     *
-     * If the friend_id is found the process is halted and true is returned.
-     *
-     * @param $user_id the user for which you want to retrieve its friends
-     * @param $friend_id the friend you are looking for
-     * @return bool true if found, false otherwise
-     */
-    private function searchForFriend($user_id, $friend_id): bool
-    {
-        $friends = FacebookFriend::query()
-            ->where('user_id', $user_id)->get(['friend_id'])->toArray();
-
-        foreach ($friends as $friend) {
-            if (!array_key_exists($friend['friend_id'], $this->all_friends)) {
-                $this->all_friends[$friend['friend_id']] = $user_id;
-            }
-            if ($friend['friend_id'] == $friend_id) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Reconstructs the path via which the from user id knows the friend.
-     *
-     * @param int $from_user_id the source
-     * @param int $friend_id the friend to look for
-     * @return array an array of user_id's which lead up to the friend_id
-     */
-    private function reconstructPath(int $from_user_id, int $friend_id)
-    {
-        $source = $this->all_friends[$friend_id];
-        $path[] = $friend_id;
-        $path[] = $source;
-        while ($source != $from_user_id) {
-            $source = $this->all_friends[$source];
-            $path[] = $source;
-        }
-        $path = array_reverse($path);
-        return $path;
-    }
 
 }

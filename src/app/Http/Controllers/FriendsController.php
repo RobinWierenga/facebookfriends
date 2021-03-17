@@ -34,9 +34,10 @@ class FriendsController extends Controller
     {
         $from = $request->get('from');
         $to = $request->get('to');
-        $path = [];
+        $path2 = [];
         $user_id = $request->get('user_id');
-        $duration = 0;
+        $duration2 = 0;
+
         $error = '';
 
         if (($from != '' && !is_numeric($from)) || ($to != '' && !is_numeric($to))) {
@@ -45,8 +46,8 @@ class FriendsController extends Controller
 
         if (!$error && $from && $to) {
             $start = microtime(true);
-            $path = $this->facebook_friend_repository->findShortestPath($from, $to);
-            $duration = round(microtime(true) - $start, 2);
+            $path2 = $this->facebook_friend_repository->findShortestPath2($from, $to);
+            $duration2 = round(microtime(true) - $start, 2);
         }
 
         $all_friends = FacebookFriend::query()->paginate(10);
@@ -60,8 +61,8 @@ class FriendsController extends Controller
                 'from' => $from,
                 'error'=> $error,
                 'to' => $to,
-                'duration' => $duration,
-                'path' => $path,
+                'duration2' => $duration2,
+                'path2' => $path2,
                 'friends' => $friends
             ]
         );
