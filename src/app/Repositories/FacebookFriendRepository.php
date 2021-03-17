@@ -60,7 +60,7 @@ class FacebookFriendRepository
      */
     private function findWhoKnows(int $from, int $to): int
     {
-        $sql = $this->buildQuery($from, $to, 5);
+        $sql = $this->buildQuery($from, $to, self::MAX_DEPTH);
 
         $results = FacebookFriend::getConnectionResolver()->connection()->select($sql)[0];
         $results = json_decode(json_encode($results), true);
